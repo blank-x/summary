@@ -3,6 +3,8 @@
     <el-radio-group v-model="slideType" @change="changeSlideType">
       <el-radio label="one-in">横向动画</el-radio>
       <el-radio label="one-in2">纵向动画</el-radio>
+      <el-radio label="one-in3">交错动画</el-radio>
+      <el-radio label="one-in4">翻转动画</el-radio>
     </el-radio-group>
     <ul>
       <transition-group name="slide" tag="li" @before-enter="beforeEnter" @enter="enter" @leave="leave">
@@ -11,7 +13,7 @@
           :key="item.sha"
           :data-index="index"
           class="TimelineItem"
-          :class="{active:index===activeIndex}"
+          :class="{active:index===activeIndex,'container-3d':slideType==='one-in4'}"
           @mouseenter="mouseEnterItem(index)"
         >
           <div class="message-box">
@@ -34,6 +36,7 @@
         </li>
       </transition-group>
     </ul>
+    <div v-if="commitList.length===0 && !loading" class="empty-txt">没有数据了</div>
     <div class="footer-btn-box">
       <el-button :disabled="pagination.page===1" @click="toPrev">上一页</el-button>
       <el-button @click="toNext">下一页</el-button>
@@ -94,7 +97,10 @@
         this.getList()
       },
       toNext() {
-        this.pagination.page++
+        if (this.commitList.length > 0) {
+          this.pagination.page++
+        }
+
         this.getList()
       },
       beforeEnter(el) {
@@ -102,12 +108,22 @@
       },
       enter(el, done) {
         const delay = el.dataset.index * 100
-        setTimeout(() => {
-          el.style.transition = 'opacity 0.4s '
-          el.style.opacity = 1
-          el.style.animation = `${this.slideType} 0.4s  1`
-          done()
-        }, delay)
+        if (this.slideType === 'one-in' || this.slideType === 'one-in2' || this.slideType === 'one-in4') {
+          setTimeout(() => {
+            el.style.transition = 'opacity 0.4s '
+            el.style.opacity = 1
+            el.style.animation = `${this.slideType} 0.4s  1`
+            done()
+          }, delay)
+        } else if (this.slideType === 'one-in3') {
+          const animation = el.dataset.index % 2 === 0 ? 'one-in 0.4s 1' : 'one-in3 0.4s 1'
+          setTimeout(() => {
+            el.style.transition = 'opacity 0.4s '
+            el.style.opacity = 1
+            el.style.animation = animation
+            done()
+          }, delay)
+        }
       },
       leave(el) {
         el.style.transition = ''
@@ -207,6 +223,11 @@
     margin-left: 30px;
   }
 
+  .container-3d {
+    transform-origin: center top;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
 </style>
 <style>
   @keyframes one-in {
@@ -224,5 +245,31 @@
     to {
       transform: translateY(0);
     }
+  }
+  @keyframes one-in3 {
+    from {
+      transform: translateY(-20%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  @keyframes one-in4 {
+    from {
+      height: 100%;
+      transform: rotateX(75deg);
+    }
+    to {
+      height: 100%;
+      transform: rotateX(0deg);
+      /* transform-origin: 145%, 0; */
+    }
+  }
+
+  .empty-txt{
+    height: 150px;
+    line-height: 150px;
+    font-size: 12px;
+    text-align: center;
   }
 </style>
